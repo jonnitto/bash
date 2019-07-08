@@ -629,6 +629,10 @@ alias la='ls -lsha'
 alias q='exit'
 alias c='clear'
 
+alias cu='composer update'
+alias ci='composer install'
+alias co='composer outdated'
+
 _parse_git_branch() {
     local BRANCH=`git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'`
     if [[ ! "${BRANCH}" == "" ]]; then
