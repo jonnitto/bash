@@ -628,7 +628,6 @@ alias la='ls -lsha'
 
 alias q='exit'
 alias c='clear'
-alias p='ping'
 
 _parse_git_branch() {
     local BRANCH=`git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'`
