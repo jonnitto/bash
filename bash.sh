@@ -19,8 +19,9 @@ GROUP=$(id -g -n)
 
 # Get server type
 _hostname=""
+_servername="h"
 case $(hostname -f) in
-    (*.uberspace.de) server="Uberspace"; _hostname="$server " ;;
+    (*.uberspace.de) server="Uberspace"; _hostname="$server " _servername="u" ;;
     (*.mynet.at) server="myNET"; _hostname="$server " ;;
     (*.local) server="Local" ;;
     (*) server="NONE" ;;
@@ -673,7 +674,7 @@ _parse_return() {
 }
 
 
-PS1="\$(_parse_return)\[$GRAY\]\${_hostname}\h \[$MAGENTA\]$(printf '\xe2\x9e\x9c') \[$CYAN\]\w \$([[ -n \$(git branch 2> /dev/null) ]])\[$MAGENTA\]\$(_parse_system) \[\$(_parse_git_color)\]\$(_parse_git_branch)\[$WHITE\]\n$ \[$NC\]"
+PS1="\$(_parse_return)\[$GRAY\]\${_hostname}\\${_servername} \[$MAGENTA\]$(printf '\xe2\x9e\x9c') \[$CYAN\]\w \$([[ -n \$(git branch 2> /dev/null) ]])\[$MAGENTA\]\$(_parse_system) \[\$(_parse_git_color)\]\$(_parse_git_branch)\[$WHITE\]\n$ \[$NC\]"
 
 printf "\n\n    ${GREEN}Synchronized bash scripts from GitHub for ${WHITE}${server}${GREEN} successfully loaded${NC}\n\n    For an overview of the commands type ${CYAN}helpme${NC}\n\n"
 if [[ -f "syncBashScript.sh" ]]; then rm syncBashScript.sh; fi
