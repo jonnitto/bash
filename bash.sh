@@ -230,10 +230,6 @@ __EOF__
             cat Configuration/Settings.yaml
             echo
         }
-
-
-        export NVM_DIR="/var/www/.nvm"
-        [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
     ;;
 esac
 
