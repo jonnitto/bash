@@ -21,7 +21,7 @@ GROUP=$(id -g -n)
 _hostname=""
 _servername="h"
 case $(hostname -f) in
-    (*.uberspace.de) server="Uberspace"; _hostname="$server " _servername="u" ;;
+    (*.uberspace.de) server="Uberspace"; _hostname="$server "; _servername="u" ;;
     (*.mynet.at) server="myNET"; _hostname="$server " ;;
     (*.local) server="Local" ;;
     (*) server="NONE" ;;
