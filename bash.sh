@@ -20,7 +20,7 @@ GROUP=$(id -g -n)
 # Get server type
 _hostname=""
 case $(hostname -f) in
-    (*.uberspace.at) server="Uberspace"; _hostname="$server " ;;
+    (*.uberspace.de) server="Uberspace"; _hostname="$server " ;;
     (*.mynet.at) server="myNET"; _hostname="$server " ;;
     (*.local) server="Local" ;;
     (*) server="NONE" ;;
