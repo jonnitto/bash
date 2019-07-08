@@ -27,7 +27,6 @@ case $(hostname -f) in
 esac
 
 export FLOW_CONTEXT=Development
-export LC_ALL=C
 export CLICOLOR=1
 
 readKey() { echo; cat ~/.ssh/id_rsa.pub; echo; }
@@ -237,7 +236,6 @@ __EOF__
         [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
     ;;
 esac
-
 
 # ================================
 #    HELPER FUNCTIONS
@@ -641,7 +639,7 @@ _parse_git_branch() {
 }
 
 _parse_git_dirty() {
-    local status=`git status 2>&1 | tee`
+    local status=`LC_ALL=C git status 2>&1 | tee`
     local dirty=`echo -n "${status}" 2> /dev/null | grep "modified:" &> /dev/null; echo "$?"`
     local untracked=`echo -n "${status}" 2> /dev/null | grep "Untracked files" &> /dev/null; echo "$?"`
     local ahead=`echo -n "${status}" 2> /dev/null | grep "Your branch is ahead of" &> /dev/null; echo "$?"`
@@ -649,12 +647,12 @@ _parse_git_dirty() {
     local renamed=`echo -n "${status}" 2> /dev/null | grep "renamed:" &> /dev/null; echo "$?"`
     local deleted=`echo -n "${status}" 2> /dev/null | grep "deleted:" &> /dev/null; echo "$?"`
     local bits=''
-    if [ "${renamed}" == "0" ]; then bits=">${bits}"; fi
-    if [ "${ahead}" == "0" ]; then bits="*${bits}"; fi
-    if [ "${newfile}" == "0" ]; then bits="+${bits}"; fi
-    if [ "${untracked}" == "0" ]; then bits="?${bits}"; fi
-    if [ "${deleted}" == "0" ]; then bits="x${bits}"; fi
-    if [ "${dirty}" == "0" ]; then bits="!${bits}"; fi
+    if [ "${renamed}" == "0" ]; then bits="→${bits}"; fi
+    if [ "${ahead}" == "0" ]; then bits="↑${bits}"; fi
+    if [ "${newfile}" == "0" ]; then bits="✚${bits}"; fi
+    if [ "${untracked}" == "0" ]; then bits="⚑${bits}"; fi
+    if [ "${deleted}" == "0" ]; then bits="✖${bits}"; fi
+    if [ "${dirty}" == "0" ]; then bits="✱${bits}"; fi
     if [ ! "${bits}" == "" ]; then printf " ${bits}"; fi
 }
 _parse_git_color() {
