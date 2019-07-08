@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# wget -qN https://raw.githubusercontent.com/jonnitto/bash/master/bash.sh?v=1 -O syncBashScript.sh; source syncBashScript.sh
+# wget -qN https://raw.githubusercontent.com/jonnitto/bash/master/bash.sh -O syncBashScript.sh; source syncBashScript.sh
 
 {  # make sure whole file is loaded
 
