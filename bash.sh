@@ -629,6 +629,8 @@ alias c='clear'
 alias cu='composer update'
 alias ci='composer install'
 alias co='composer outdated'
+alias cr='composer require'
+alias crnu='composer require --no-update'
 
 function commitUpdate() {
     git add *.lock
