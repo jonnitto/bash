@@ -53,10 +53,10 @@ case $server in
 
         writeNeosSettings() {
             _checkNeos; [[ $? -ne 0 ]] && return 1
-            _info "Write configuration file for Neos ..."
+            _msgInfo "Write configuration file for Neos ..."
             dbName=$(echo ${PWD##*/} | perl -ne 'print lc(join("_", split(/(?=[A-Z])/)))')
             dbName="neos_${dbName}"
-            _info "Create Database" $dbName
+            _msgInfo "Create Database" $dbName
             mysql -uroot -proot -e "create database ${dbName}"
             cat > Configuration/Settings.yaml <<__EOF__
 Neos: &settings
@@ -76,7 +76,7 @@ Neos: &settings
 
 TYPO3: *settings
 __EOF__
-            _info "Following configuration was written"
+            _msgInfo "Following configuration was written"
             cat Configuration/Settings.yaml
             echo
         }
@@ -123,7 +123,7 @@ __EOF__
         alias gfr='git stash && git fetch && git rebase && git stash pop'
         gc() {
             if [[ -z ${1+x} ]]
-                then _error "Please set a commit message"
+                then _msgError "Please set a commit message"
                 else git commit -m "$1"
             fi
         }
@@ -135,9 +135,9 @@ __EOF__
         }
         deleteGitTag() {
             if [[ -z ${1+x} ]]
-                then _error "Please set a tag as first argument"
+                then _msgError "Please set a tag as first argument"
                 else
-                    _error "Delete Git tag" "'$1'"
+                    _msgError "Delete Git tag" "'$1'"
                     git tag -d $1
                     git push origin :refs/tags/$1
                     echo
@@ -209,10 +209,10 @@ __EOF__
         # Generate the DB and the 'Settings.yaml' file
         writeNeosSettings() {
             _checkNeos; [[ $? -ne 0 ]] && return 1
-            _info "Write configuration file for Neos ..."
+            _msgInfo "Write configuration file for Neos ..."
             dbName=$(echo ${PWD##*/} | perl -ne 'print lc(join("_", split(/(?=[A-Z])/)))')
             dbName="neos_${dbName}"
-            _info "Create Database" $dbName
+            _msgInfo "Create Database" $dbName
             mysql -uroot -proot -e "create database ${dbName}"
             cat > Configuration/Settings.yaml <<__EOF__
 Neos: &settings
@@ -233,7 +233,7 @@ Neos: &settings
 TYPO3: *settings
 __EOF__
 
-            _info "Following configuration was written"
+            _msgInfo "Following configuration was written"
             cat Configuration/Settings.yaml
             echo
         }
@@ -255,38 +255,38 @@ _isSystem() {
     fi
 }
 _available() { command -v $1 >/dev/null 2>&1; }
-_error() { printf "\n    ${RED}${1}${NC} ${2}\n\n"; }
-_info() { printf "\n    ${CYAN}${1}${GREEN} ${2}${NC}\n\n"; }
-_success() { printf "\n    ${GREEN}${1}${NC}\n\n"; }
+_msgError() { printf "\n    ${RED}${1}${NC} ${2}\n\n"; }
+_msgInfo() { printf "\n    ${CYAN}${1}${GREEN} ${2}${NC}\n\n"; }
+_msgSuccess() { printf "\n    ${GREEN}${1}${NC}\n\n"; }
 _checkGitPull() {
     if [[ -d ".git" ]]; then git pull
         if [[ $? -ne 0 ]]; then
-            _error "Couldn't pull newest changes. Please check the output above"
+            _msgError "Couldn't pull newest changes. Please check the output above"
             return 1
         fi
     fi
 }
 _checkNeos() {
     if [[ ! $(_isNeos) ]]; then
-        _error "You're not in a Neos folder"
+        _msgError "You're not in a Neos folder"
         return 1
     fi
 }
 _checkShopware() {
     if [[ ! $(_isShopware) ]]; then
-        _error "You're not in a Shopware folder"
+        _msgError "You're not in a Shopware folder"
         return 1
     fi
 }
 _checkMice() {
     if [[ ! $(_isMice) ]]; then
-        _error "You're not in a Mice folder"
+        _msgError "You're not in a Mice folder"
         return 1
     fi
 }
 _checkWordpress() {
     if [[ ! $(_isWordpress) ]]; then
-        _error "You're not in a Wordpress folder"
+        _msgError "You're not in a Wordpress folder"
         return 1
     fi
 }
@@ -348,14 +348,14 @@ update() {
 
 updateShopware() {
     _checkShopware; [[ $? -ne 0 ]] && return 1
-    _info "Update your Shopware Template ..."
+    _msgInfo "Update your Shopware Template ..."
     _checkGitPull; [[ $? -ne 0 ]] && return 1
     ./var/cache/clear_cache.sh
     php bin/console sw:cache:clear
     php bin/console sw:theme:cache:generate
     if [[ $? -eq 0 ]]
-        then _success "Update completed"
-        else _error "Something went wrong. Please check the output above"
+        then _msgSuccess "Update completed"
+        else _msgError "Something went wrong. Please check the output above"
     fi
 }
 
@@ -390,12 +390,12 @@ switchContext() {
     then export FLOW_CONTEXT=Production
     else export FLOW_CONTEXT=Development
   fi
-  _info "Set Flow Context to" $FLOW_CONTEXT
+  _msgInfo "Set Flow Context to" $FLOW_CONTEXT
 }
 
 killcache() {
     _checkNeos; [[ $? -ne 0 ]] && return 1
-    _info "Flush cache ..."
+    _msgInfo "Flush cache ..."
     sleep 2
     if _available setopt
         then setopt localoptions rmstarsilent
@@ -403,29 +403,29 @@ killcache() {
     FLOW_CONTEXT=${SERVER_CONTEXT} ./flow flow:cache:flush
     if [[ $? -ne 0 ]]; then
         sleep 10
-        _info "Delete temporary folder ..."
+        _msgInfo "Delete temporary folder ..."
         mv Data/Temporary Data/Temporary_OLD
         rm -rf Data/Temporary_OLD
     fi
-    _info "Warmup caches ..."
+    _msgInfo "Warmup caches ..."
     FLOW_CONTEXT=${SERVER_CONTEXT} ./flow flow:cache:warmup
 }
 
 # Remove thumbnails, publish resources, create and render thumbnails
 recreateThumbnails() {
     _checkNeos; [[ $? -ne 0 ]] && return 1
-    _info "Recreate thumbnails, this might take a while ..."
+    _msgInfo "Recreate thumbnails, this might take a while ..."
     FLOW_CONTEXT=${SERVER_CONTEXT} ./flow media:clearthumbnails
     FLOW_CONTEXT=${SERVER_CONTEXT} ./flow resource:publish
     FLOW_CONTEXT=${SERVER_CONTEXT} ./flow media:createthumbnails
     FLOW_CONTEXT=${SERVER_CONTEXT} ./flow media:renderthumbnails
-    _success "Done"
+    _msgSuccess "Done"
 }
 
 # Adjust file permissions for CLI and web server access
 repairpermission() {
     _checkNeos; [[ $? -ne 0 ]] && return 1
-    _info "Setting file permissions per file, this might take a while ..."
+    _msgInfo "Setting file permissions per file, this might take a while ..."
     chown -R $USER:$GROUP .
     find . -type d -exec chmod 775 {} \;
     find . -type f \! \( -name commit-msg -or -name '*.sh' \) -exec chmod 664 {} \;
@@ -435,12 +435,12 @@ repairpermission() {
     chmod 644 Web/.htaccess
     chown -R $USER:$GROUP Web/_Resources
     chmod 775 Web/_Resources
-    _success "Done"
+    _msgSuccess "Done"
 }
 
 updateNeos() {
     _checkNeos; [[ $? -ne 0 ]] && return 1
-    _info "Update your Neos installation ..."
+    _msgInfo "Update your Neos installation ..."
     _checkGitPull; [[ $? -ne 0 ]] && return 1
     if ! [[ $(git ls-files composer.lock) ]]
         then rm -f composer.lock
@@ -453,17 +453,17 @@ updateNeos() {
         then eval php composer.phar $command
         else eval composer $command
     fi
-    [[ $? -ne 0 ]] && _error "Something went wrong with composer." "Please check the output above" && return 1;
+    [[ $? -ne 0 ]] && _msgError "Something went wrong with composer." "Please check the output above" && return 1;
     killcache
     if [[ $? -ne 0 ]]; then
-        _info "Please wait 90 seconds"
+        _msgInfo "Please wait 90 seconds"
         sleep 90
     fi
     FLOW_CONTEXT=${SERVER_CONTEXT} ./flow doctrine:migrate
-    [[ $? -ne 0 ]] && _error "Something went wrong with the database migration." "Please check the output above" && return 1;
+    [[ $? -ne 0 ]] && _msgError "Something went wrong with the database migration." "Please check the output above" && return 1;
     FLOW_CONTEXT=${SERVER_CONTEXT} ./flow resource:publish
-    [[ $? -ne 0 ]] && _error "Something went wrong with on publishing the resources." "Please check the output above" && return 1;
-    _success "Update completed"
+    [[ $? -ne 0 ]] && _msgError "Something went wrong with on publishing the resources." "Please check the output above" && return 1;
+    _msgSuccess "Update completed"
 }
 
 # ================================
@@ -583,7 +583,7 @@ _installSyncBash() {
     local BASH_SCRIPT=https://raw.githubusercontent.com/jonnitto/bash/master/bash.sh
 
     if ! grep -sFq "$BASH_SCRIPT" ~/.bash_sync; then
-        _info "Install synchronized bash script ..."
+        _msgInfo "Install synchronized bash script ..."
         cat > ~/.bash_sync <<__EOF__
 wget -qN ${BASH_SCRIPT} -O syncBashScript.sh; source syncBashScript.sh
 __EOF__
