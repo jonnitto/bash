@@ -144,6 +144,12 @@ __EOF__
             fi
         }
 
+        sshList() {
+            # list hosts defined in ssh config
+
+            awk '$1 ~ /Host$/ {for (i=2; i<=NF; i++) print $i}' ~/.ssh/config
+        }
+
         # With the command `NeosProject` you get the site package folder and available folders definded in `ADDITIONAL_FOLDER`
         # With `codeProject` you open your project in Visual Studio Code
         # With `atomProject` you open your project in Atom
@@ -613,15 +619,48 @@ alias mkdir='mkdir -pv'
 alias head='head -n 50'
 alias tail='tail -n 50'
 
-alias ..='cd ../'
-alias ...='cd ../../'
-alias ....='cd ../../../'
-alias ....='cd ../../../../'
-alias ~='cd ~'
+alias ..='cd ..'         # Go up one directory
+alias cd..='cd ..'       # Common misspelling for going up one directory
+alias ...='cd ../..'     # Go up two directories
+alias ....='cd ../../..' # Go up three directories
+alias -- -='cd -'        # Go back
 
-alias ls='ls'
+# Shell History
+alias h='history'
+
+# Display whatever file is regular file or folder
+catt() {
+  for i in "$@"; do
+    if [ -d "$i" ]; then
+      ls "$i"
+    else
+      cat "$i"
+    fi
+  done
+}
+
+
+# List directory contents
+if ls --color -d . &> /dev/null
+    then alias ls="ls --color=auto"
+elif ls -G -d . &> /dev/null
+    then alias ls='ls -G'          # Compact view, show colors
+fi
+
+alias sl=ls
+alias l='ls -a'
 alias ll='ls -lh'
 alias la='ls -lsha'
+alias l1='ls -1'
+
+# colored grep
+# Need to check an existing file for a pattern that will be found to ensure
+# that the check works when on an OS that supports the color option
+if grep --color=auto "a" "${BASH_IT}/"*.md &> /dev/null
+then
+  alias grep='grep --color=auto'
+  export GREP_COLOR='1;33'
+fi
 
 alias q='exit'
 alias c='clear'
