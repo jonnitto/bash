@@ -61,6 +61,10 @@ case $server in
     (Uberspace|myNET)
         generateKey() { ssh-keygen -t rsa -b 4096 -C "$(hostname -f)"; readKey; }
     ;;
+    (Beach|Local)
+        alias runUnitTest='./Packages/Libraries/phpunit/phpunit/phpunit -c Build/BuildEssentials/PhpUnit/UnitTests.xml --colors=always'
+        alias runFunctionalTest='./Packages/Libraries/phpunit/phpunit/phpunit -c Build/BuildEssentials/PhpUnit/FunctionalTests.xml --colors=always'
+    ;;
 esac
 case $server in
     (Uberspace)
@@ -107,14 +111,7 @@ __EOF__
         NEOS_DEPLOYER="/web/${USER}/Neos/current"
         SHOPWARE_DEPLOYER="/web/${USER}/Shopware/current"
     ;;
-
-    (Beach|Local)
-        alias runUnitTest='./Packages/Libraries/phpunit/phpunit/phpunit -c Build/BuildEssentials/PhpUnit/UnitTests.xml --colors=always'
-        alias runFunctionalTest='./Packages/Libraries/phpunit/phpunit/phpunit -c Build/BuildEssentials/PhpUnit/FunctionalTests.xml --colors=always'
-    ;;
-    
     (Local)
-        export SERVER_CONTEXT=Development
         alias h='cd ~/'
         alias r='cd ~/Repos'
         alias n='cd ~/Repos/Neos.Plugins'
