@@ -17,6 +17,8 @@ NC='\033[0m'
 USER=$(whoami)
 GROUP=$(id -g -n)
 
+_BASH_SCRIPT_LOCATION='https://raw.githubusercontent.com/jonnitto/bash/master/bash.sh'
+
 export CLICOLOR=1
 
 
@@ -117,10 +119,11 @@ __EOF__
         alias r='cd ~/Repos'
         alias n='cd ~/Repos/Neos.Plugins'
         alias p='cd ~/Repos/_Jonnitto/'
-        alias copyKey='printf "\n ${GREEN}SSH Key copied to clipboard${NC} \n ";pbcopy < ~/.ssh/id_rsa.pub'
+        alias copyKey='_msgSuccess "SSH Key copied to clipboard$";pbcopy < ~/.ssh/id_rsa.pub'
+        alias copyBashInstall='_msgSuccess "Install command for bash script copied to clipboard";echo "wget -qN ${_BASH_SCRIPT_LOCATION} -O syncBashScript.sh; source syncBashScript.sh" | pbcopy'
         alias startserver='http-server -a localhost -p 8000 -c-1'
         alias webpack-dev-server='node ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --port 8073'
-        alias installGoogleFonts='printf "\n ${GREEN}Install all Google Fonts ...${NC} \n ";curl https://raw.githubusercontent.com/qrpike/Web-Font-Load/master/install.sh | sh'
+        alias installGoogleFonts='_msgSuccess "Install all Google Fonts ...";curl https://raw.githubusercontent.com/qrpike/Web-Font-Load/master/install.sh | sh'
         alias ios='open /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app'
         alias sshConnect='ssh $(basename "$PWD")'
         alias editConnect='code ~/.ssh/config'
@@ -606,12 +609,10 @@ helpme() {
 #    AUTOMATIC INSTALL
 # ================================
 _installSyncBash() {
-    local BASH_SCRIPT=https://raw.githubusercontent.com/jonnitto/bash/master/bash.sh
-
-    if ! grep -sFq "$BASH_SCRIPT" ~/.bash_sync; then
+    if ! grep -sFq "$_BASH_SCRIPT_LOCATION" ~/.bash_sync; then
         _msgInfo "Install synchronized bash script ..."
         cat > ~/.bash_sync <<__EOF__
-wget -qN ${BASH_SCRIPT} -O syncBashScript.sh; source syncBashScript.sh
+wget -qN ${_BASH_SCRIPT_LOCATION} -O syncBashScript.sh; source syncBashScript.sh
 __EOF__
         case $server in
             (NONE) return 0 ;;
@@ -631,7 +632,7 @@ __EOF__
 _installSyncBash
 
 _updateSyncBash() {
-    wget -qN --no-cache https://raw.githubusercontent.com/jonnitto/bash/master/bash.sh -O syncBashScript.sh; source syncBashScript.sh
+    wget -qN --no-cache $_BASH_SCRIPT_LOCATION -O syncBashScript.sh; source syncBashScript.sh
 }
 
 # ================================
