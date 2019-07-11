@@ -17,6 +17,9 @@ NC='\033[0m'
 USER=$(whoami)
 GROUP=$(id -g -n)
 
+export CLICOLOR=1
+
+
 # Get server type
 _hostname=""
 _servername="h"
@@ -27,10 +30,26 @@ case $(hostname -f) in
     (*) server="NONE" ;;
 esac
 
-export FLOW_CONTEXT=Development
-export CLICOLOR=1
+if [[ $USER == "beach" ]]
+    then server="Beach"; _servername="u"
+fi
 
-readKey() { echo; cat ~/.ssh/id_rsa.pub; echo; }
+# ================================
+#    SET CONTEXT
+# ================================
+case $server in
+    (Beach)
+        SERVER_CONTEXT=$FLOW_CONTEXT
+    ;;
+    (NONE|Local)
+        SERVER_CONTEXT=Development
+        export FLOW_CONTEXT=Development
+    ;;
+    (*)
+        SERVER_CONTEXT=Production
+        export FLOW_CONTEXT=Development
+    ;;
+esac
 
 # ================================
 #    SERVER SPECIFIC
@@ -38,7 +57,6 @@ readKey() { echo; cat ~/.ssh/id_rsa.pub; echo; }
 
 case $server in
     (Uberspace|myNET)
-        export SERVER_CONTEXT=Production
         generateKey() { ssh-keygen -t rsa -b 4096 -C "$(hostname -f)"; readKey; }
     ;;
 esac
@@ -87,6 +105,11 @@ __EOF__
         NEOS_DEPLOYER="/web/${USER}/Neos/current"
         SHOPWARE_DEPLOYER="/web/${USER}/Shopware/current"
     ;;
+
+    (Beach|Local)
+        alias runUnitTest='./Packages/Libraries/phpunit/phpunit/phpunit -c Build/BuildEssentials/PhpUnit/UnitTests.xml --colors=always'
+        alias runFunctionalTest='./Packages/Libraries/phpunit/phpunit/phpunit -c Build/BuildEssentials/PhpUnit/FunctionalTests.xml --colors=always'
+    ;;
     
     (Local)
         export SERVER_CONTEXT=Development
@@ -106,10 +129,7 @@ __EOF__
         alias neospluginsDiff='ksdiff ~/Repos/Neos.Plugins Packages/Plugins Packages/Carbon'
         alias gulpfileDiff='ksdiff ~/Repos/Neos.Plugins/Carbon.Gulp Build/Gulp'
         alias openNeosPlugins='code ~/Repos/Neos.Plugins'
-        alias createAdmin='./flow user:create --roles Administrator'
         alias runFlow='./flow server:run --host neos.local'
-        alias runUnitTest='./Packages/Libraries/phpunit/phpunit/phpunit -c Build/BuildEssentials/PhpUnit/UnitTests.xml --colors=always'
-        alias runFunctionalTest='./Packages/Libraries/phpunit/phpunit/phpunit -c Build/BuildEssentials/PhpUnit/FunctionalTests.xml --colors=always'
 
         alias gl="git log --graph --pretty=format:'%Cred%h%Creset %an: %s - %Creset %C(yellow)%d%Creset %Cgreen(%cr)%Creset' --abbrev-commit --date=relative"
         alias gp='git push origin HEAD'
@@ -330,6 +350,8 @@ if [[ ! -z "$WEB_ROOT" ]] || [[ ! -z "$NEOS_ROOT" ]] || [[ ! -z "$NEOS_DEPLOYER"
     }
 fi
 
+readKey() { echo; cat ~/.ssh/id_rsa.pub; echo; }
+
 # Run this command to update your Neos/Shopware project
 update() {
   if [[ $(_isNeos) ]]; then updateNeos
@@ -383,15 +405,19 @@ alias prunesite='FLOW_CONTEXT=${SERVER_CONTEXT} ./flow site:prune'
 alias importsite='FLOW_CONTEXT=${SERVER_CONTEXT} ./flow site:import --package-key $(basename Packages/Sites/*)'
 alias exportsite='FLOW_CONTEXT=${SERVER_CONTEXT} ./flow site:export --package-key $(basename Packages/Sites/*) --tidy'
 alias clonesite='FLOW_CONTEXT=${SERVER_CONTEXT} ./flow clone:preset'
+alias createAdmin='./flow user:create --roles Administrator'
 
 # Switch context between Development and Production
-switchContext() {
-  if [[ $FLOW_CONTEXT == "Development" ]]
-    then export FLOW_CONTEXT=Production
-    else export FLOW_CONTEXT=Development
-  fi
-  _msgInfo "Set Flow Context to" $FLOW_CONTEXT
-}
+if [[ $FLOW_CONTEXT == "Development" ]] || [[ $FLOW_CONTEXT == "Production" ]]
+    then
+        switchContext() {
+            if [[ $FLOW_CONTEXT == "Development" ]]
+                then export FLOW_CONTEXT=Production
+                else export FLOW_CONTEXT=Development
+            fi
+            _msgInfo "Set Flow Context to" $FLOW_CONTEXT
+        }
+fi
 
 killcache() {
     _checkNeos; [[ $? -ne 0 ]] && return 1
