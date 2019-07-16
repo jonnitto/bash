@@ -116,7 +116,7 @@ __EOF__
         alias r='cd ~/Repos'
         alias n='cd ~/Repos/Neos.Plugins'
         alias p='cd ~/Repos/_Jonnitto/'
-        alias copyKey='_msgSuccess "SSH Key copied to clipboard$";pbcopy < ~/.ssh/id_rsa.pub'
+        alias copyKey='_msgSuccess "SSH Key copied to clipboard";pbcopy < ~/.ssh/id_rsa.pub'
         alias copyBashInstall='_msgSuccess "Install command for bash script copied to clipboard";echo "wget -qN ${_BASH_SCRIPT_LOCATION} -O syncBashScript.sh; source syncBashScript.sh" | pbcopy'
         alias startserver='http-server -a localhost -p 8000 -c-1'
         alias webpack-dev-server='node ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --port 8073'
