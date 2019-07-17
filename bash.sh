@@ -78,16 +78,13 @@ case $server in
         writeNeosSettings() {
             _checkNeos; [[ $? -ne 0 ]] && return 1
             _msgInfo "Write configuration file for Neos ..."
-            dbName=$(echo ${PWD##*/} | perl -ne 'print lc(join("_", split(/(?=[A-Z])/)))')
-            dbName="neos_${dbName}"
-            _msgInfo "Create Database" $dbName
-            mysql -uroot -proot -e "create database ${dbName}"
             cat > Configuration/Settings.yaml <<__EOF__
 Neos: &settings
   Imagine:
     driver: Imagick
   Flow:
     core:
+        phpBinaryPathAndFilename: '/usr/bin/php'
       subRequestIniEntries:
         memory_limit: 2048M
     persistence:
