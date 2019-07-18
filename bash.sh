@@ -27,6 +27,7 @@ _hostname=""
 _servername="h"
 case $(hostname -f) in
     (*.uberspace.de) server="Uberspace"; _hostname="$server "; _servername="u" ;;
+    (*.punkt.de) server="PunktDe"; _hostname="$server " ;;
     (*.mynet.at) server="myNET"; _hostname="$server " ;;
     (*.local) server="Local" ;;
     (*) server="NONE" ;;
@@ -58,7 +59,7 @@ esac
 # ================================
 
 case $server in
-    (Uberspace|myNET)
+    (Uberspace|myNET|PunktDe)
         generateKey() { ssh-keygen -t rsa -b 4096 -C "$(hostname -f)"; readKey; }
     ;;
     (Beach|Local)
@@ -101,6 +102,12 @@ __EOF__
             cat Configuration/Settings.yaml
             echo
         }
+    ;;
+    (PunktDe)
+        WEB_ROOT="/var/www/"
+        NEOS_ROOT="/var/www/Neos/current"
+        NEOS_DEPLOYER="/var/www/Neos/current"
+        SHOPWARE_DEPLOYER="/var/www/Shopware/current"
     ;;
     (myNET)
         WEB_ROOT="/web/${USER}/web/"
