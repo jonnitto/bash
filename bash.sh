@@ -27,7 +27,7 @@ _hostname=""
 _servername="h"
 case $(hostname -f) in
     (*.uberspace.de) server="Uberspace"; _hostname="$server "; _servername="u" ;;
-    (*.punkt.de) server="PunktDe"; _hostname="$server " ;;
+    (*.punkt.de) server="PunktDe"; _hostname="$server "; _servername="u@\h" ;;
     (*.mynet.at) server="myNET"; _hostname="$server " ;;
     (*.local) server="Local" ;;
     (*) server="NONE" ;;
