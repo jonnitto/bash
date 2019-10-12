@@ -705,46 +705,50 @@ function commitUpdate() {
     git push
 }
 
-_parse_git_branch() {
-    local BRANCH=`git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'`
-    if [[ ! "${BRANCH}" == "" ]]; then
-        local STAT=`_parse_git_dirty`
-        printf "[${BRANCH}${STAT}]"
-    fi
+if [[ $server != "Local" ]] {
+
+    _parse_git_branch() {
+        local BRANCH=`git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'`
+        if [[ ! "${BRANCH}" == "" ]]; then
+            local STAT=`_parse_git_dirty`
+            printf "[${BRANCH}${STAT}]"
+        fi
+    }
+
+    _parse_git_dirty() {
+        local status=`LC_ALL=C git status 2>&1 | tee`
+        local dirty=`echo -n "${status}" 2> /dev/null | grep "modified:" &> /dev/null; echo "$?"`
+        local untracked=`echo -n "${status}" 2> /dev/null | grep "Untracked files" &> /dev/null; echo "$?"`
+        local ahead=`echo -n "${status}" 2> /dev/null | grep "Your branch is ahead of" &> /dev/null; echo "$?"`
+        local newfile=`echo -n "${status}" 2> /dev/null | grep "new file:" &> /dev/null; echo "$?"`
+        local renamed=`echo -n "${status}" 2> /dev/null | grep "renamed:" &> /dev/null; echo "$?"`
+        local deleted=`echo -n "${status}" 2> /dev/null | grep "deleted:" &> /dev/null; echo "$?"`
+        local bits=''
+        if [ "${renamed}" == "0" ]; then bits="→${bits}"; fi
+        if [ "${ahead}" == "0" ]; then bits="↑${bits}"; fi
+        if [ "${newfile}" == "0" ]; then bits="✚${bits}"; fi
+        if [ "${untracked}" == "0" ]; then bits="⚑${bits}"; fi
+        if [ "${deleted}" == "0" ]; then bits="✖${bits}"; fi
+        if [ "${dirty}" == "0" ]; then bits="✱${bits}"; fi
+        if [ ! "${bits}" == "" ]; then printf " ${bits}"; fi
+    }
+    _parse_git_color() {
+    if [[ "$(_parse_git_dirty)" != "" ]] ; then printf $RED; else printf $GREEN; fi
+    }
+    _parse_system() {
+        local system=$(_isSystem)
+        if [ ! "${system}" == "" ]; then printf " (${system})"; fi
+    }
+
+    _parse_return() {
+        if [[ $? -ne 0 ]]; then printf "$RED\xe2\x9c\x98$NC "; fi
+    }
+
+
+    PS1="\$(_parse_return)\[$GRAY\]\${_hostname}\\${_servername} \[$MAGENTA\]$(printf '\xe2\x9e\x9c') \[$CYAN\]\w \$([[ -n \$(git branch 2> /dev/null) ]])\[$MAGENTA\]\$(_parse_system) \[\$(_parse_git_color)\]\$(_parse_git_branch)\[$WHITE\]\n$ \[$NC\]"
+
 }
 
-_parse_git_dirty() {
-    local status=`LC_ALL=C git status 2>&1 | tee`
-    local dirty=`echo -n "${status}" 2> /dev/null | grep "modified:" &> /dev/null; echo "$?"`
-    local untracked=`echo -n "${status}" 2> /dev/null | grep "Untracked files" &> /dev/null; echo "$?"`
-    local ahead=`echo -n "${status}" 2> /dev/null | grep "Your branch is ahead of" &> /dev/null; echo "$?"`
-    local newfile=`echo -n "${status}" 2> /dev/null | grep "new file:" &> /dev/null; echo "$?"`
-    local renamed=`echo -n "${status}" 2> /dev/null | grep "renamed:" &> /dev/null; echo "$?"`
-    local deleted=`echo -n "${status}" 2> /dev/null | grep "deleted:" &> /dev/null; echo "$?"`
-    local bits=''
-    if [ "${renamed}" == "0" ]; then bits="→${bits}"; fi
-    if [ "${ahead}" == "0" ]; then bits="↑${bits}"; fi
-    if [ "${newfile}" == "0" ]; then bits="✚${bits}"; fi
-    if [ "${untracked}" == "0" ]; then bits="⚑${bits}"; fi
-    if [ "${deleted}" == "0" ]; then bits="✖${bits}"; fi
-    if [ "${dirty}" == "0" ]; then bits="✱${bits}"; fi
-    if [ ! "${bits}" == "" ]; then printf " ${bits}"; fi
-}
-_parse_git_color() {
-  if [[ "$(_parse_git_dirty)" != "" ]] ; then printf $RED; else printf $GREEN; fi
-}
-_parse_system() {
-    local system=$(_isSystem)
-    if [ ! "${system}" == "" ]; then printf " (${system})"; fi
-}
-
-_parse_return() {
-    if [[ $? -ne 0 ]]; then printf "$RED\xe2\x9c\x98$NC "; fi
-}
-
-
-PS1="\$(_parse_return)\[$GRAY\]\${_hostname}\\${_servername} \[$MAGENTA\]$(printf '\xe2\x9e\x9c') \[$CYAN\]\w \$([[ -n \$(git branch 2> /dev/null) ]])\[$MAGENTA\]\$(_parse_system) \[\$(_parse_git_color)\]\$(_parse_git_branch)\[$WHITE\]\n$ \[$NC\]"
-
-printf "\n\n    ${GREEN}Synchronized bash scripts from GitHub for ${WHITE}${server}${GREEN} successfully loaded${NC}\n\n    For an overview of the commands type ${CYAN}helpme${NC}\n\n"
+printf "\n\n    ${GREEN}Synchronized shell scripts from GitHub for ${WHITE}${server}${GREEN} successfully loaded${NC}\n\n    For an overview of the commands type ${CYAN}helpme${NC}\n\n"
 if [[ -f "syncBashScript.sh" ]]; then rm syncBashScript.sh; fi
 }  # make sure whole file is loaded
