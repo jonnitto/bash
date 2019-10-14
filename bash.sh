@@ -202,7 +202,7 @@ updateShopware() {
 
 flow() {
     _checkNeos; [[ $? -ne 0 ]] && return 1
-    if [[ ! $@ ]] then; ./flow; return 0; fi;
+    if [[ ! $@ ]]; then ./flow; return 0; fi;
     typeset -A flowCommands;
     typeset -A shellCommands;
     typeset -A functionCommands;
