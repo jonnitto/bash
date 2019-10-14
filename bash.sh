@@ -4,6 +4,7 @@
 
 {  # make sure whole file is loaded
 
+# COLORS
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
@@ -14,15 +15,20 @@ GRAY='\033[2;37m'
 WHITE="\033[1;37m"
 NC='\033[0m'
 
+# USER
 USER=$(whoami)
 GROUP=$(id -g -n)
 
 _BASH_SCRIPT_LOCATION='https://raw.githubusercontent.com/jonnitto/bash/master/bash.sh'
 
+
 export CLICOLOR=1
 
+# ================================
+#       SERVER
+# ================================
 
-# Get server type
+## Get server type
 _hostname=""
 _servername="h"
 case $(hostname -f) in
@@ -37,36 +43,17 @@ if [[ $USER == "beach" ]]
     then server="Beach"; _servername="u"
 fi
 
-# ================================
-#    SET CONTEXT
-# ================================
-case $server in
-    (Beach)
-        SERVER_CONTEXT=$FLOW_CONTEXT
-    ;;
-    (NONE|Local)
-        SERVER_CONTEXT=Development
-        export FLOW_CONTEXT=Development
-    ;;
-    (*)
-        SERVER_CONTEXT=Production
-        export FLOW_CONTEXT=Development
-    ;;
-esac
+## Read ssh key
+readKey() { echo; cat ~/.ssh/id_rsa.pub; echo; }
 
-# ================================
-#    SERVER SPECIFIC
-# ================================
-
+## Generate ssh key
 case $server in
     (Uberspace|myNET|PunktDe)
         generateKey() { ssh-keygen -t rsa -b 4096 -C "$(hostname -f)"; readKey; }
     ;;
-    (Beach|Local)
-        alias runUnitTest='./Packages/Libraries/phpunit/phpunit/phpunit -c Build/BuildEssentials/PhpUnit/UnitTests.xml --colors=always'
-        alias runFunctionalTest='./Packages/Libraries/phpunit/phpunit/phpunit -c Build/BuildEssentials/PhpUnit/FunctionalTests.xml --colors=always'
-    ;;
 esac
+
+## Set paths
 case $server in
     (Uberspace)
         WEB_ROOT="/var/www/virtual/${USER}"
@@ -75,7 +62,279 @@ case $server in
         SHOPWARE_DEPLOYER="/var/www/virtual/${USER}/Shopware/current"
         alias readSQLConfig='cat ~/.my.cnf'
         alias installImgOptimizer='npm install -g jpegtran-bin optipng-bin gifsicle svgo'
+    ;;
+    (PunktDe)
+        WEB_ROOT="/var/www/"
+        NEOS_ROOT="/var/www/Neos/current"
+        NEOS_DEPLOYER="/var/www/Neos/current"
+        SHOPWARE_DEPLOYER="/var/www/Shopware/current"
+    ;;
+    (myNET)
+        WEB_ROOT="/web/${USER}/web/"
+        NEOS_ROOT="/web/${USER}/Neos/releases/current"
+        NEOS_DEPLOYER="/web/${USER}/Neos/current"
+        SHOPWARE_DEPLOYER="/web/${USER}/Shopware/current"
+    ;;
+esac
 
+# ================================
+#    HELPER FUNCTIONS
+# ================================
+
+_isNeos() {      if [[ -f "flow" ]] || [[ -f "flow.php" ]] || [[ -f "flow.bat" ]]; then echo true; fi }
+_isShopware() {  if [[ -f "shopware.php" ]]; then echo true; fi }
+_isMice() {      if [[ -d "mice" ]]; then echo true; fi }
+_isWordpress() { if [[ -f "wp-login.php" ]]; then echo true; fi }
+_isSystem() {
+    if [[ $(_isNeos) ]]; then printf "Neos"
+    elif [[ $(_isShopware) ]]; then printf "Shopware"
+    elif [[ $(_isWordpress) ]]; then printf "Wordpress"
+    elif [[ $(_isMice) ]]; then printf "Mice"
+    fi
+}
+_available() { command -v $1 >/dev/null 2>&1; }
+_msgError() { printf "\n    ${RED}${1}${NC} ${2}\n\n"; }
+_msgInfo() { printf "\n    ${CYAN}${1}${GREEN} ${2}${NC}\n\n"; }
+_msgSuccess() { printf "\n    ${GREEN}${1}${NC}\n\n"; }
+_checkGitPull() {
+    if [[ -d ".git" ]]; then git pull
+        if [[ $? -ne 0 ]]; then
+            _msgError "Couldn't pull newest changes. Please check the output above"
+            return 1
+        fi
+    fi
+}
+_checkNeos() {
+    if [[ ! $(_isNeos) ]]; then
+        _msgError "You're not in a Neos folder"
+        return 1
+    fi
+}
+_checkShopware() {
+    if [[ ! $(_isShopware) ]]; then
+        _msgError "You're not in a Shopware folder"
+        return 1
+    fi
+}
+_checkMice() {
+    if [[ ! $(_isMice) ]]; then
+        _msgError "You're not in a Mice folder"
+        return 1
+    fi
+}
+_checkWordpress() {
+    if [[ ! $(_isWordpress) ]]; then
+        _msgError "You're not in a Wordpress folder"
+        return 1
+    fi
+}
+
+# Run this command to update your Neos/Shopware project
+update() {
+  if [[ $(_isNeos) ]]; then updateNeos
+  elif [[ $(_isShopware) ]]; then updateShopware
+  elif type go2 &>/dev/null; then
+    go2
+    if [[ $(_isNeos) ]]; then updateNeos
+    elif [[ $(_isShopware) ]]; then updateShopware
+    fi
+  fi
+}
+
+## go 2 specifc folder funtions
+
+if [[ ! -z "$WEB_ROOT" ]]; then
+    go2www() {
+        if [ "$WEB_ROOT" ] && [[ -d "$WEB_ROOT" ]]; then cd $WEB_ROOT; fi
+    }
+fi
+
+
+if [[ ! -z "$NEOS_ROOT" ]] || [[ ! -z "$NEOS_DEPLOYER" ]]; then
+    go2Neos() {
+        if [[ "$NEOS_DEPLOYER" ]] && [[ -d "$NEOS_DEPLOYER" ]] && [[ -f "$NEOS_DEPLOYER/flow" ]]
+            then cd $NEOS_DEPLOYER
+        elif [[ "$NEOS_ROOT" ]] && [[ -d "$NEOS_ROOT" ]] && [[ -f "$NEOS_ROOT/flow" ]]
+            then cd $NEOS_ROOT
+        elif [[ "$WEB_ROOT" ]] && [[ -f "${WEB_ROOT}/flow" ]]
+            then type go2www &>/dev/null && go2www; 
+        fi
+    }
+fi
+
+if [[ ! -z "$SHOPWARE_DEPLOYER" ]]; then
+    go2Shopware() {
+        if [[ "$SHOPWARE_DEPLOYER" ]] && [[ -d "$SHOPWARE_DEPLOYER" ]] && [[ -f "$SHOPWARE_DEPLOYER/shopware.php" ]]
+            then cd $SHOPWARE_DEPLOYER
+        elif [[ "$WEB_ROOT" ]] && [[ -f "${WEB_ROOT}/shopware.php" ]]
+            then type go2www &>/dev/null && go2www; 
+        fi
+    }
+fi
+
+if [[ ! -z "$WEB_ROOT" ]] || [[ ! -z "$NEOS_ROOT" ]] || [[ ! -z "$NEOS_DEPLOYER" ]] || [[ ! -z "$SHOPWARE_DEPLOYER" ]]; then
+    go2() {
+        type go2Shopware &>/dev/null && go2Shopware;
+        type go2Neos &>/dev/null && go2Neos;
+    }
+fi
+
+# ================================
+#    SHOPWARE
+# ================================
+
+updateShopware() {
+    _checkShopware; [[ $? -ne 0 ]] && return 1
+    _msgInfo "Update your Shopware Template ..."
+    _checkGitPull; [[ $? -ne 0 ]] && return 1
+    ./var/cache/clear_cache.sh
+    php bin/console sw:cache:clear
+    php bin/console sw:theme:cache:generate
+    if [[ $? -eq 0 ]]
+        then _msgSuccess "Update completed"
+        else _msgError "Something went wrong. Please check the output above"
+    fi
+}
+
+# ================================
+#       NEOS
+# ================================
+
+flow() {
+    _checkNeos; [[ $? -ne 0 ]] && return 1
+    if [[ ! $@ ]] then; ./flow; return 0; fi;
+    typeset -A flowCommands;
+    typeset -A shellCommands;
+    typeset -A functionCommands;
+    flowCommands=(
+        flushcache 'flow:cache:flush'
+        warmup 'flow:cache:warmup'
+        publishResource 'resource:publish'
+        migratedb 'doctrine:migrate'
+        noderepair 'node:repair'
+        setcharset 'database:setcharset'
+        prunesite 'site:prune'
+        importsite 'site:import --package-key $(basename Packages/Sites/*)'
+        exportsite 'site:export --package-key $(basename Packages/Sites/*) --tidy'
+        clonesite 'clone:preset'
+        createAdmin 'user:create --roles Administrator'
+    );
+    shellCommands=(
+        setuppwd 'cat Data/SetupPassword.txt'
+    );
+    functionCommands=(
+        recreateThumbnails 'Remove thumbnails, publish resources, create and render thumbnails'
+        repairpermission 'Adjust file permissions for CLI and web server access'
+        deployContext 'Set the FLOW_CONTEXT by reading deploy.yaml'
+        switchContext 'Switch between Production and Development context'
+    );
+
+    if [[ $1 == 'helpme' ]]; then
+        for key val in ${(kv)flowCommands}; do
+            printf "\n${CYAN}%20s${NC} %-100s" \
+            $key $val
+        done
+        for key val in ${(kv)shellCommands}; do
+            printf "\n${CYAN}%20s${NC} %-100s" \
+            $key $val
+        done
+        for key val in ${(kv)functionCommands}; do
+            printf "\n${CYAN}%20s${NC} %-100s" \
+            $key $val
+        done
+        return 0;
+    fi
+
+    local cmd=$1;
+    shift;
+    if [[ ${flowCommands[$cmd]} ]]; then
+        ./flow ${flowCommands[$cmd]} $@
+        return 0;
+    fi
+    if [[ ${shellCommands[$cmd]} ]]; then
+        ${shellCommands[$cmd]} $@
+        return 0;
+    fi
+    if [[ $cmd == 'recreateThumbnails' ]]; then
+        _msgInfo "Recreate thumbnails, this might take a while ..."
+        ./flow media:clearthumbnails
+        ./flow resource:publish
+        ./flow media:createthumbnails
+        ./flow media:renderthumbnails
+        _msgSuccess "Done"
+        return 0;
+    fi
+    if [[ $cmd == 'repairpermission' ]]; then
+        _msgInfo "Setting file permissions per file, this might take a while ..."
+        chown -R $USER:$GROUP .
+        find . -type d -exec chmod 775 {} \;
+        find . -type f \! \( -name commit-msg -or -name '*.sh' \) -exec chmod 664 {} \;
+        chmod 770 flow
+        chmod 755 Web
+        chmod 644 Web/index.php
+        chmod 644 Web/.htaccess
+        chown -R $USER:$GROUP Web/_Resources
+        chmod 775 Web/_Resources
+        _msgSuccess "Done"
+        return 0;
+    fi
+    if [[ $cmd == 'deployContext' ]]; then
+        local newContext='Production'
+        if [[ -f deploy.yaml ]]; then
+            flowContext=$(cat deploy.yaml | grep flow_context | awk '{print $2}')
+            subContext=$(cat deploy.yaml | grep sub_context | awk '{print $2}')
+            if [ $flowContext ]
+                then newContext=$flowContext;
+            elif [ $subContext ]
+                then newContext="Production/$subContext";
+            else
+                newContext='Production/Live';
+            fi
+        fi
+        export FLOW_CONTEXT=$newContext
+        _msgInfo "Set Flow Context to" $FLOW_CONTEXT
+        return 0;
+    fi
+    if [[ $cmd == 'switchContext' ]]; then
+        if [[ $FLOW_CONTEXT == "Development" ]]
+            then 
+                flow deployContext
+            else
+                export FLOW_CONTEXT=Development
+                _msgInfo "Set Flow Context to" $FLOW_CONTEXT
+        fi
+        return 0;
+    fi
+    ./flow $cmd $@;
+}
+
+## Set context
+case $server in
+    (NONE|Local)
+        export FLOW_CONTEXT=Development
+    ;;
+    (*)
+        flow deployContext
+    ;;
+esac
+
+## Run tests
+
+case $server in
+    (Beach|Local)
+        alias runUnitTest='./Packages/Libraries/phpunit/phpunit/phpunit -c Build/BuildEssentials/PhpUnit/UnitTests.xml --colors=always'
+        alias runFunctionalTest='./Packages/Libraries/phpunit/phpunit/phpunit -c Build/BuildEssentials/PhpUnit/FunctionalTests.xml --colors=always'
+    ;;
+esac
+
+
+# ================================
+#    SERVER SPECIFIC
+# ================================
+
+
+case $server in
+    (Uberspace)
         writeNeosSettings() {
             _checkNeos; [[ $? -ne 0 ]] && return 1
             _msgInfo "Write configuration file for Neos ..."
@@ -102,18 +361,6 @@ __EOF__
             cat Configuration/Settings.yaml
             echo
         }
-    ;;
-    (PunktDe)
-        WEB_ROOT="/var/www/"
-        NEOS_ROOT="/var/www/Neos/current"
-        NEOS_DEPLOYER="/var/www/Neos/current"
-        SHOPWARE_DEPLOYER="/var/www/Shopware/current"
-    ;;
-    (myNET)
-        WEB_ROOT="/web/${USER}/web/"
-        NEOS_ROOT="/web/${USER}/Neos/releases/current"
-        NEOS_DEPLOYER="/web/${USER}/Neos/current"
-        SHOPWARE_DEPLOYER="/web/${USER}/Shopware/current"
     ;;
     (Local)
         alias h='cd ~/'
@@ -241,7 +488,7 @@ __EOF__
             cat > Configuration/Settings.yaml <<__EOF__
 Neos: &settings
   Imagine:
-    driver: Gd
+    driver: Imagick
   Flow:
     core:
       subRequestIniEntries:
@@ -263,238 +510,6 @@ __EOF__
         }
     ;;
 esac
-
-# ================================
-#    HELPER FUNCTIONS
-# ================================
-_isNeos() {      if [[ -f "flow" ]] || [[ -f "flow.php" ]] || [[ -f "flow.bat" ]]; then echo true; fi }
-_isShopware() {  if [[ -f "shopware.php" ]]; then echo true; fi }
-_isMice() {      if [[ -d "mice" ]]; then echo true; fi }
-_isWordpress() { if [[ -f "wp-login.php" ]]; then echo true; fi }
-_isSystem() {
-    if [[ $(_isNeos) ]]; then printf "Neos"
-    elif [[ $(_isShopware) ]]; then printf "Shopware"
-    elif [[ $(_isWordpress) ]]; then printf "Wordpress"
-    elif [[ $(_isMice) ]]; then printf "Mice"
-    fi
-}
-_available() { command -v $1 >/dev/null 2>&1; }
-_msgError() { printf "\n    ${RED}${1}${NC} ${2}\n\n"; }
-_msgInfo() { printf "\n    ${CYAN}${1}${GREEN} ${2}${NC}\n\n"; }
-_msgSuccess() { printf "\n    ${GREEN}${1}${NC}\n\n"; }
-_checkGitPull() {
-    if [[ -d ".git" ]]; then git pull
-        if [[ $? -ne 0 ]]; then
-            _msgError "Couldn't pull newest changes. Please check the output above"
-            return 1
-        fi
-    fi
-}
-_checkNeos() {
-    if [[ ! $(_isNeos) ]]; then
-        _msgError "You're not in a Neos folder"
-        return 1
-    fi
-}
-_checkShopware() {
-    if [[ ! $(_isShopware) ]]; then
-        _msgError "You're not in a Shopware folder"
-        return 1
-    fi
-}
-_checkMice() {
-    if [[ ! $(_isMice) ]]; then
-        _msgError "You're not in a Mice folder"
-        return 1
-    fi
-}
-_checkWordpress() {
-    if [[ ! $(_isWordpress) ]]; then
-        _msgError "You're not in a Wordpress folder"
-        return 1
-    fi
-}
-
-# ================================
-#    GENERAL STUFF
-# ================================
-
-if [[ ! -z "$WEB_ROOT" ]]; then
-    go2www() {
-        if [ "$WEB_ROOT" ] && [[ -d "$WEB_ROOT" ]]; then cd $WEB_ROOT; fi
-    }
-fi
-
-if [[ ! -z "$NEOS_ROOT" ]] || [[ ! -z "$NEOS_DEPLOYER" ]]; then
-    go2Neos() {
-        if [[ "$NEOS_DEPLOYER" ]] && [[ -d "$NEOS_DEPLOYER" ]] && [[ -f "$NEOS_DEPLOYER/flow" ]]
-            then cd $NEOS_DEPLOYER
-        elif [[ "$NEOS_ROOT" ]] && [[ -d "$NEOS_ROOT" ]] && [[ -f "$NEOS_ROOT/flow" ]]
-            then cd $NEOS_ROOT
-        elif [[ "$WEB_ROOT" ]] && [[ -f "${WEB_ROOT}/flow" ]]
-            then type go2www &>/dev/null && go2www; 
-        fi
-    }
-fi
-
-if [[ ! -z "$SHOPWARE_DEPLOYER" ]]; then
-    go2Shopware() {
-        if [[ "$SHOPWARE_DEPLOYER" ]] && [[ -d "$SHOPWARE_DEPLOYER" ]] && [[ -f "$SHOPWARE_DEPLOYER/shopware.php" ]]
-            then cd $SHOPWARE_DEPLOYER
-        elif [[ "$WEB_ROOT" ]] && [[ -f "${WEB_ROOT}/shopware.php" ]]
-            then type go2www &>/dev/null && go2www; 
-        fi
-    }
-fi
-
-if [[ ! -z "$WEB_ROOT" ]] || [[ ! -z "$NEOS_ROOT" ]] || [[ ! -z "$NEOS_DEPLOYER" ]] || [[ ! -z "$SHOPWARE_DEPLOYER" ]]; then
-    go2() {
-        type go2Shopware &>/dev/null && go2Shopware;
-        type go2Neos &>/dev/null && go2Neos;
-    }
-fi
-
-readKey() { echo; cat ~/.ssh/id_rsa.pub; echo; }
-
-# Run this command to update your Neos/Shopware project
-update() {
-  if [[ $(_isNeos) ]]; then updateNeos
-  elif [[ $(_isShopware) ]]; then updateShopware
-  elif type go2 &>/dev/null; then
-    go2
-    if [[ $(_isNeos) ]]; then updateNeos
-    elif [[ $(_isShopware) ]]; then updateShopware
-    fi
-  fi
-}
-
-# ================================
-#    SHOPWARE
-# ================================
-
-updateShopware() {
-    _checkShopware; [[ $? -ne 0 ]] && return 1
-    _msgInfo "Update your Shopware Template ..."
-    _checkGitPull; [[ $? -ne 0 ]] && return 1
-    ./var/cache/clear_cache.sh
-    php bin/console sw:cache:clear
-    php bin/console sw:theme:cache:generate
-    if [[ $? -eq 0 ]]
-        then _msgSuccess "Update completed"
-        else _msgError "Something went wrong. Please check the output above"
-    fi
-}
-
-# ================================
-#      NEOS
-# ================================
-
-# Display help for a Neos command
-alias flowhelp="./flow help"
-# Flush all caches
-alias flushcache='FLOW_CONTEXT=${SERVER_CONTEXT} ./flow flow:cache:flush'
-# Warm up caches
-alias warmup='FLOW_CONTEXT=${SERVER_CONTEXT} ./flow flow:cache:warmup'
-# Publish resources
-alias publishResource='FLOW_CONTEXT=${SERVER_CONTEXT} ./flow resource:publish'
-# Migrate the database schema
-alias migratedb='FLOW_CONTEXT=${SERVER_CONTEXT} ./flow doctrine:migrate'
-# Repair inconsistent nodes
-alias noderepair='FLOW_CONTEXT=${SERVER_CONTEXT} ./flow node:repair'
-# Output the setup password
-alias getsetuppassword='cat Data/SetupPassword.txt'
-# Convert the database schema to use the given character set and collation
-alias setcharset='FLOW_CONTEXT=${SERVER_CONTEXT} ./flow database:setcharset'
-alias prunesite='FLOW_CONTEXT=${SERVER_CONTEXT} ./flow site:prune'
-alias importsite='FLOW_CONTEXT=${SERVER_CONTEXT} ./flow site:import --package-key $(basename Packages/Sites/*)'
-alias exportsite='FLOW_CONTEXT=${SERVER_CONTEXT} ./flow site:export --package-key $(basename Packages/Sites/*) --tidy'
-alias clonesite='FLOW_CONTEXT=${SERVER_CONTEXT} ./flow clone:preset'
-alias createAdmin='./flow user:create --roles Administrator'
-
-# Switch context between Development and Production
-if [[ $FLOW_CONTEXT == "Development" ]] || [[ $FLOW_CONTEXT == "Production" ]]
-    then
-        switchContext() {
-            if [[ $FLOW_CONTEXT == "Development" ]]
-                then export FLOW_CONTEXT=Production
-                else export FLOW_CONTEXT=Development
-            fi
-            _msgInfo "Set Flow Context to" $FLOW_CONTEXT
-        }
-fi
-
-killcache() {
-    _checkNeos; [[ $? -ne 0 ]] && return 1
-    _msgInfo "Flush cache ..."
-    sleep 2
-    if _available setopt
-        then setopt localoptions rmstarsilent
-    fi
-    FLOW_CONTEXT=${SERVER_CONTEXT} ./flow flow:cache:flush
-    if [[ $? -ne 0 ]]; then
-        sleep 10
-        _msgInfo "Delete temporary folder ..."
-        mv Data/Temporary Data/Temporary_OLD
-        rm -rf Data/Temporary_OLD
-    fi
-    _msgInfo "Warmup caches ..."
-    FLOW_CONTEXT=${SERVER_CONTEXT} ./flow flow:cache:warmup
-}
-
-# Remove thumbnails, publish resources, create and render thumbnails
-recreateThumbnails() {
-    _checkNeos; [[ $? -ne 0 ]] && return 1
-    _msgInfo "Recreate thumbnails, this might take a while ..."
-    FLOW_CONTEXT=${SERVER_CONTEXT} ./flow media:clearthumbnails
-    FLOW_CONTEXT=${SERVER_CONTEXT} ./flow resource:publish
-    FLOW_CONTEXT=${SERVER_CONTEXT} ./flow media:createthumbnails
-    FLOW_CONTEXT=${SERVER_CONTEXT} ./flow media:renderthumbnails
-    _msgSuccess "Done"
-}
-
-# Adjust file permissions for CLI and web server access
-repairpermission() {
-    _checkNeos; [[ $? -ne 0 ]] && return 1
-    _msgInfo "Setting file permissions per file, this might take a while ..."
-    chown -R $USER:$GROUP .
-    find . -type d -exec chmod 775 {} \;
-    find . -type f \! \( -name commit-msg -or -name '*.sh' \) -exec chmod 664 {} \;
-    chmod 770 flow
-    chmod 755 Web
-    chmod 644 Web/index.php
-    chmod 644 Web/.htaccess
-    chown -R $USER:$GROUP Web/_Resources
-    chmod 775 Web/_Resources
-    _msgSuccess "Done"
-}
-
-updateNeos() {
-    _checkNeos; [[ $? -ne 0 ]] && return 1
-    _msgInfo "Update your Neos installation ..."
-    _checkGitPull; [[ $? -ne 0 ]] && return 1
-    if ! [[ $(git ls-files composer.lock) ]]
-        then rm -f composer.lock
-    fi
-    local command="install --prefer-dist"
-    if ! [[ $SERVER_CONTEXT == 'Development' ]]; then
-        command="install --no-dev --prefer-dist"
-    fi
-    if [[ -f "composer.phar" ]]
-        then eval php composer.phar $command
-        else eval composer $command
-    fi
-    [[ $? -ne 0 ]] && _msgError "Something went wrong with composer." "Please check the output above" && return 1;
-    killcache
-    if [[ $? -ne 0 ]]; then
-        _msgInfo "Please wait 90 seconds"
-        sleep 90
-    fi
-    FLOW_CONTEXT=${SERVER_CONTEXT} ./flow doctrine:migrate
-    [[ $? -ne 0 ]] && _msgError "Something went wrong with the database migration." "Please check the output above" && return 1;
-    FLOW_CONTEXT=${SERVER_CONTEXT} ./flow resource:publish
-    [[ $? -ne 0 ]] && _msgError "Something went wrong with on publishing the resources." "Please check the output above" && return 1;
-    _msgSuccess "Update completed"
-}
 
 # ================================
 #      HELPME
@@ -570,35 +585,6 @@ helpme() {
     _Headline flowhelp Neos
     _Entry go2Neos "Go to the Neos Folder"
     _Entry writeNeosSettings "Generate the 'Settings.yaml' file"
-    _Entry switchContext "Switch context between Development and Production"
-    _Entry flowhelp "Display help for a Neos command"
-    _Entry setcharset "Convert the database schema to use the given"
-    _Lines setcharset "character set and collation"
-    _Entry flushcache "Flush all caches"
-    _Entry killcache "Try to flush all caches"
-    _Entry publishResource "Publish resources"
-    _Entry recreateThumbnails "Remove thumbnails, publish resources,"
-    _Lines recreateThumbnails "create and render thumbnails"
-    _Entry repairpermission "Adjust file permissions for CLI"
-    _Lines repairpermission "and web server access"
-    _Entry warmup "Warm up caches"
-    _Entry migratedb "Migrate the database schema"
-    _Entry noderepair "Repair inconsistent nodes"
-    _Entry getsetuppassword "Output the setup password"
-    _Entry updateNeos "Run this command to update your Neos project"
-    _Lines updateNeos ""
-    _Lines updateNeos "The command do the following steps:"
-    _Lines go2Neos "* Go to the Neos folder"
-    _Lines updateNeos "* Check if we are in a Neos folder"
-    _Lines updateNeos "* Check if the installation is a monorepo"
-    _Lines updateNeos "* Pull newest changes"
-    _Lines updateNeos "* Remove the composer.lock file"
-    _Lines updateNeos "* Install the composer dependencies"
-    _Lines updateNeos "* Rescan package availability"
-    _Lines updateNeos "* Recreates the PackageStates configuration"
-    _Lines updateNeos "* Force-flush all caches"
-    _Lines updateNeos "* Migrate the database schema"
-    _Lines updateNeos "* Publish resources"
     printf "\n\n\n"
     unset _Headline
     unset __printHeadline
