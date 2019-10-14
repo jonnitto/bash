@@ -207,6 +207,7 @@ flow() {
         exportsite 'site:export --package-key $(basename Packages/Sites/*) --tidy'
         clonesite 'clone:preset'
         createAdmin 'user:create --roles Administrator'
+        run 'server:run --host neos.local'
     );
     shellCommands=(
         setuppwd 'cat Data/SetupPassword.txt'
@@ -220,15 +221,15 @@ flow() {
 
     if [[ $1 == 'helpme' ]]; then
         for key val in ${(kv)flowCommands}; do
-            printf "\n${CYAN}%20s${NC} %-100s" \
+            printf "\n${CYAN}%20s${NC} %-70s" \
             $key $val
         done
         for key val in ${(kv)shellCommands}; do
-            printf "\n${CYAN}%20s${NC} %-100s" \
+            printf "\n${CYAN}%20s${NC} %-70s" \
             $key $val
         done
         for key val in ${(kv)functionCommands}; do
-            printf "\n${CYAN}%20s${NC} %-100s" \
+            printf "\n${CYAN}%20s${NC} %-70s" \
             $key $val
         done
         return 0;
@@ -237,11 +238,11 @@ flow() {
     local cmd=$1;
     shift;
     if [ ${flowCommands[$cmd]} ]; then
-        ./flow ${flowCommands[$cmd]} $@
+        echo "./flow ${flowCommands[$cmd]} $@" | bash
         return 0;
     fi
     if [ ${shellCommands[$cmd]} ]; then
-        ${shellCommands[$cmd]} $@
+        echo "${shellCommands[$cmd]} $@" | bash
         return 0;
     fi
     if [[ $cmd == 'recreateThumbnails' ]]; then
@@ -369,7 +370,6 @@ __EOF__
         alias neospluginsDiff='ksdiff ~/Repos/Neos.Plugins Packages/Plugins Packages/Carbon'
         alias gulpfileDiff='ksdiff ~/Repos/Neos.Plugins/Carbon.Gulp Build/Gulp'
         alias openNeosPlugins='code ~/Repos/Neos.Plugins'
-        alias runFlow='./flow server:run --host neos.local'
 
         alias gl="git log --graph --pretty=format:'%Cred%h%Creset %an: %s - %Creset %C(yellow)%d%Creset %Cgreen(%cr)%Creset' --abbrev-commit --date=relative"
         alias gp='git push origin HEAD'
