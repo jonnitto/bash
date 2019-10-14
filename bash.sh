@@ -430,8 +430,8 @@ __EOF__
             # Get the site folder
             for f in "${SITE_FOLDER[@]}"
                 do
-                if [ -d $f ] && [ ${#FOLDER_ARRAY[@]} == 0 ]
-                    then FOLDER_ARRAY+=("${f}/$([ $(echo ${f}/* | wc -w) == 1 ] && basename ${f}/*)");
+                if [ -d "$f" ] && [[ ${#FOLDER_ARRAY[@]} == 0 ]]
+                    then FOLDER_ARRAY+=("${f}/$([ $(echo ${f}/* | wc -w) = 1 ] && basename ${f}/*)");
                 fi
             done
 
@@ -444,7 +444,7 @@ __EOF__
             done
 
             # Fallback
-            if [ -n "$fallback" ] && [ ${#FOLDER_ARRAY[@]} == 0 ]
+            if [ -n "$fallback" ] && [[ ${#FOLDER_ARRAY[@]} == 0 ]]
                 then FOLDER_ARRAY=($fallback)
             fi;
             echo "${FOLDER_ARRAY[@]}"
@@ -452,7 +452,7 @@ __EOF__
 
         codeProject() {
             # If we have a code workspace, open this instead
-            if [ -f *.code-workspace ]
+            if [[ -f *.code-workspace ]]
                 then for f in *.code-workspace; do open "$f"; done;
                 else code $(NeosProject)
             fi;
