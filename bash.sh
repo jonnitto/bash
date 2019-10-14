@@ -367,7 +367,6 @@ __EOF__
         alias editConnect='code ~/.ssh/config'
         alias yui='yarn upgrade-interactive --latest'
         alias initCarbon='git init;git add .;git commit -m ":tada: Initial commit";git remote add origin git@github.com:CarbonPackages/$(basename "$PWD").git;git push -u origin master'
-        alias neospluginsDiff='ksdiff ~/Repos/Neos.Plugins Packages/Plugins Packages/Carbon'
         alias gulpfileDiff='ksdiff ~/Repos/Neos.Plugins/Carbon.Gulp Build/Gulp'
         alias openNeosPlugins='code ~/Repos/Neos.Plugins'
 
@@ -381,6 +380,16 @@ __EOF__
         alias ga='git add'
         alias gap='git add -p'
         alias gfr='git stash && git fetch && git rebase && git stash pop'
+        neosPluginsDiff() {
+            if [[ $1 ]]
+                then
+                    if [[ $1 == Carbon.* ]]
+                        then ksdiff ~/Repos/Neos.Plugins/$1 Packages/Carbon/$1
+                        else ksdiff ~/Repos/Neos.Plugins/$1 Packages/Plugins/$1
+                    fi
+                else ksdiff ~/Repos/Neos.Plugins Packages/Plugins Packages/Carbon
+            fi
+        }
         gc() {
             if [ -z ${1+x} ]
                 then _msgError "Please set a commit message"
