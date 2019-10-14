@@ -81,15 +81,15 @@ esac
 #    HELPER FUNCTIONS
 # ================================
 
-_isNeos() {      if [[ -f "flow" ]] || [[ -f "flow.php" ]] || [[ -f "flow.bat" ]]; then echo true; fi }
-_isShopware() {  if [[ -f "shopware.php" ]]; then echo true; fi }
-_isMice() {      if [[ -d "mice" ]]; then echo true; fi }
-_isWordpress() { if [[ -f "wp-login.php" ]]; then echo true; fi }
+_isNeos() {      if [ -f "flow" ] || [ -f "flow.php" ] || [ -f "flow.bat" ]; then echo true; fi }
+_isShopware() {  if [ -f "shopware.php" ]; then echo true; fi }
+_isMice() {      if [ -d "mice" ]; then echo true; fi }
+_isWordpress() { if [ -f "wp-login.php" ]; then echo true; fi }
 _isSystem() {
-    if [[ $(_isNeos) ]]; then printf "Neos"
-    elif [[ $(_isShopware) ]]; then printf "Shopware"
-    elif [[ $(_isWordpress) ]]; then printf "Wordpress"
-    elif [[ $(_isMice) ]]; then printf "Mice"
+    if [ $(_isNeos) ]; then printf "Neos"
+    elif [ $(_isShopware) ]; then printf "Shopware"
+    elif [ $(_isWordpress) ]; then printf "Wordpress"
+    elif [ $(_isMice) ]; then printf "Mice"
     fi
 }
 _available() { command -v $1 >/dev/null 2>&1; }
@@ -97,82 +97,70 @@ _msgError() { printf "\n    ${RED}${1}${NC} ${2}\n\n"; }
 _msgInfo() { printf "\n    ${CYAN}${1}${GREEN} ${2}${NC}\n\n"; }
 _msgSuccess() { printf "\n    ${GREEN}${1}${NC}\n\n"; }
 _checkGitPull() {
-    if [[ -d ".git" ]]; then git pull
-        if [[ $? -ne 0 ]]; then
+    if [ -d ".git" ]; then git pull
+        if [ $? -ne 0 ]; then
             _msgError "Couldn't pull newest changes. Please check the output above"
             return 1
         fi
     fi
 }
 _checkNeos() {
-    if [[ ! $(_isNeos) ]]; then
+    if [ ! $(_isNeos) ]; then
         _msgError "You're not in a Neos folder"
         return 1
     fi
 }
 _checkShopware() {
-    if [[ ! $(_isShopware) ]]; then
+    if [ ! $(_isShopware) ]; then
         _msgError "You're not in a Shopware folder"
         return 1
     fi
 }
 _checkMice() {
-    if [[ ! $(_isMice) ]]; then
+    if [ ! $(_isMice) ]; then
         _msgError "You're not in a Mice folder"
         return 1
     fi
 }
 _checkWordpress() {
-    if [[ ! $(_isWordpress) ]]; then
+    if [ ! $(_isWordpress) ]; then
         _msgError "You're not in a Wordpress folder"
         return 1
     fi
 }
 
-# Run this command to update your Neos/Shopware project
-update() {
-  if [[ $(_isNeos) ]]; then updateNeos
-  elif [[ $(_isShopware) ]]; then updateShopware
-  elif type go2 &>/dev/null; then
-    go2
-    if [[ $(_isNeos) ]]; then updateNeos
-    elif [[ $(_isShopware) ]]; then updateShopware
-    fi
-  fi
-}
-
 ## go 2 specifc folder funtions
 
-if [[ ! -z "$WEB_ROOT" ]]; then
+if [ ! -z "$WEB_ROOT" ]; then
     go2www() {
-        if [ "$WEB_ROOT" ] && [[ -d "$WEB_ROOT" ]]; then cd $WEB_ROOT; fi
+        if [ "$WEB_ROOT" ] && [ -d "$WEB_ROOT" ]; then cd $WEB_ROOT; fi
     }
 fi
 
 
-if [[ ! -z "$NEOS_ROOT" ]] || [[ ! -z "$NEOS_DEPLOYER" ]]; then
+if [ ! -z "$NEOS_ROOT" ] || [ ! -z "$NEOS_DEPLOYER" ]; then
     go2Neos() {
-        if [[ "$NEOS_DEPLOYER" ]] && [[ -d "$NEOS_DEPLOYER" ]] && [[ -f "$NEOS_DEPLOYER/flow" ]]
+        if [ "$NEOS_DEPLOYER" ] && [ -d "$NEOS_DEPLOYER" ] && [ -f "$NEOS_DEPLOYER/flow" ]
             then cd $NEOS_DEPLOYER
-        elif [[ "$NEOS_ROOT" ]] && [[ -d "$NEOS_ROOT" ]] && [[ -f "$NEOS_ROOT/flow" ]]
+        elif [ "$NEOS_ROOT" ] && [ -d "$NEOS_ROOT" ] && [ -f "$NEOS_ROOT/flow" ]
             then cd $NEOS_ROOT
-        elif [[ "$WEB_ROOT" ]] && [[ -f "${WEB_ROOT}/flow" ]]
+        elif [ "$WEB_ROOT" ] && [ -f "${WEB_ROOT}/flow" ]
             then type go2www &>/dev/null && go2www; 
         fi
     }
 fi
 
-if [[ ! -z "$SHOPWARE_DEPLOYER" ]]; then
+if [ ! -z "$SHOPWARE_DEPLOYER" ]; then
     go2Shopware() {
-        if [[ "$SHOPWARE_DEPLOYER" ]] && [[ -d "$SHOPWARE_DEPLOYER" ]] && [[ -f "$SHOPWARE_DEPLOYER/shopware.php" ]]
+        if [ "$SHOPWARE_DEPLOYER" ] && [ -d "$SHOPWARE_DEPLOYER" ] && [ -f "$SHOPWARE_DEPLOYER/shopware.php" ]
             then cd $SHOPWARE_DEPLOYER
-        elif [[ "$WEB_ROOT" ]] && [[ -f "${WEB_ROOT}/shopware.php" ]]
+        elif [ "$WEB_ROOT" ] && [ -f "${WEB_ROOT}/shopware.php" ]
             then type go2www &>/dev/null && go2www; 
         fi
     }
 fi
 
-if [[ ! -z "$WEB_ROOT" ]] || [[ ! -z "$NEOS_ROOT" ]] || [[ ! -z "$NEOS_DEPLOYER" ]] || [[ ! -z "$SHOPWARE_DEPLOYER" ]]; then
+if [ ! -z "$WEB_ROOT" ] || [ ! -z "$NEOS_ROOT" ] || [ ! -z "$NEOS_DEPLOYER" ] || [ ! -z "$SHOPWARE_DEPLOYER" ]; then
     go2() {
         type go2Shopware &>/dev/null && go2Shopware;
         type go2Neos &>/dev/null && go2Neos;
@@ -184,13 +172,13 @@ fi
 # ================================
 
 updateShopware() {
-    _checkShopware; [[ $? -ne 0 ]] && return 1
+    _checkShopware; [ $? -ne 0 ] && return 1
     _msgInfo "Update your Shopware Template ..."
-    _checkGitPull; [[ $? -ne 0 ]] && return 1
+    _checkGitPull; [ $? -ne 0 ] && return 1
     ./var/cache/clear_cache.sh
     php bin/console sw:cache:clear
     php bin/console sw:theme:cache:generate
-    if [[ $? -eq 0 ]]
+    if [ $? -eq 0 ]
         then _msgSuccess "Update completed"
         else _msgError "Something went wrong. Please check the output above"
     fi
@@ -201,8 +189,8 @@ updateShopware() {
 # ================================
 
 flow() {
-    _checkNeos; [[ $? -ne 0 ]] && return 1
-    if [[ ! $@ ]]; then 
+    _checkNeos; [ $? -ne 0 ] && return 1
+    if [ ! $@ ]; then 
         ./flow
         return 0;
     fi
@@ -250,11 +238,11 @@ flow() {
 
     local cmd=$1;
     shift;
-    if [[ ${flowCommands[$cmd]} ]]; then
+    if [ ${flowCommands[$cmd]} ]; then
         ./flow ${flowCommands[$cmd]} $@
         return 0;
     fi
-    if [[ ${shellCommands[$cmd]} ]]; then
+    if [ ${shellCommands[$cmd]} ]; then
         ${shellCommands[$cmd]} $@
         return 0;
     fi
@@ -283,7 +271,7 @@ flow() {
     fi
     if [[ $cmd == 'deployContext' ]]; then
         local newContext='Production'
-        if [[ -f deploy.yaml ]]; then
+        if [ -f deploy.yaml ]; then
             flowContext=$(cat deploy.yaml | grep flow_context | awk '{print $2}')
             subContext=$(cat deploy.yaml | grep sub_context | awk '{print $2}')
             if [ $flowContext ]
@@ -339,7 +327,7 @@ esac
 case $server in
     (Uberspace)
         writeNeosSettings() {
-            _checkNeos; [[ $? -ne 0 ]] && return 1
+            _checkNeos; [ $? -ne 0 ] && return 1
             _msgInfo "Write configuration file for Neos ..."
             cat > Configuration/Settings.yaml <<__EOF__
 Neos: &settings
@@ -396,19 +384,19 @@ __EOF__
         alias gap='git add -p'
         alias gfr='git stash && git fetch && git rebase && git stash pop'
         gc() {
-            if [[ -z ${1+x} ]]
+            if [ -z ${1+x} ]
                 then _msgError "Please set a commit message"
                 else git commit -m "$1"
             fi
         }
         gca() {
-            if [[ -z ${1+x} ]]
+            if [ -z ${1+x} ]
                 then git commit -a
                 else git commit -a -m "$1"
             fi
         }
         deleteGitTag() {
-            if [[ -z ${1+x} ]]
+            if [ -z ${1+x} ]
                 then _msgError "Please set a tag as first argument"
                 else
                     _msgError "Delete Git tag" "'$1'"
@@ -444,21 +432,21 @@ __EOF__
             # Get the site folder
             for f in "${SITE_FOLDER[@]}"
                 do
-                if [[ -d $f ]] && [[ ${#FOLDER_ARRAY[@]} == 0 ]]
-                    then FOLDER_ARRAY+=("${f}/$([[ $(echo ${f}/* | wc -w) == 1 ]] && basename ${f}/*)");
+                if [ -d $f ] && [ ${#FOLDER_ARRAY[@]} == 0 ]
+                    then FOLDER_ARRAY+=("${f}/$([ $(echo ${f}/* | wc -w) == 1 ] && basename ${f}/*)");
                 fi
             done
 
             # Get additional folder
             for f in "${ADDITIONAL_FOLDER[@]}"
                 do
-                if [[ -d "${f}" ]]
+                if [ -d "${f}" ]
                     then FOLDER_ARRAY+=($f)
                 fi
             done
 
             # Fallback
-            if [[ -n "$fallback" ]] && [[ ${#FOLDER_ARRAY[@]} == 0 ]]
+            if [ -n "$fallback" ] && [ ${#FOLDER_ARRAY[@]} == 0 ]
                 then FOLDER_ARRAY=($fallback)
             fi;
             echo "${FOLDER_ARRAY[@]}"
@@ -482,7 +470,7 @@ __EOF__
 
         # Generate the DB and the 'Settings.yaml' file
         writeNeosSettings() {
-            _checkNeos; [[ $? -ne 0 ]] && return 1
+            _checkNeos; [ $? -ne 0 ] && return 1
             _msgInfo "Write configuration file for Neos ..."
             dbName=$(echo ${PWD##*/} | perl -ne 'print lc(join("_", split(/(?=[A-Z])/)))')
             dbName="neos_${dbName}"
@@ -542,9 +530,6 @@ helpme() {
         fi
     }
 
-    _Headline update Update
-    _Entry update "Update your Neos or Shopware instance"
-
     _Headline go2 System
     _Entry go2www "Go to the www folder"
     _Entry go2 "Try to go to the Neos or Shopware folder"
@@ -593,36 +578,6 @@ helpme() {
     unset __printHeadline
     unset _Entry
     unset _Lines
-}
-
-# ================================
-#    AUTOMATIC INSTALL
-# ================================
-_installSyncBash() {
-    if ! grep -sFq "$_BASH_SCRIPT_LOCATION" ~/.bash_sync; then
-        _msgInfo "Install synchronized bash script ..."
-        cat > ~/.bash_sync <<__EOF__
-wget -qN ${_BASH_SCRIPT_LOCATION} -O syncBashScript.sh; source syncBashScript.sh
-__EOF__
-        case $server in
-            (NONE) return 0 ;;
-            (*) TARGET=~/.bash_profile ;;
-        esac
-        if ! grep -sFq "~/.bash_sync" $TARGET; then
-            cat >> ${TARGET} <<__EOF__
-# Load sync bash script
-if [[ -f ~/.bash_sync ]]
-  then source ~/.bash_sync
-fi
-__EOF__
-        fi
-    fi
-}
-
-_installSyncBash
-
-_updateSyncBash() {
-    wget -qN --no-cache $_BASH_SCRIPT_LOCATION -O syncBashScript.sh; source syncBashScript.sh
 }
 
 # ================================
@@ -685,50 +640,7 @@ function commitUpdate() {
     git push
 }
 
-if [[ $server != "Local" ]] {
-
-    _parse_git_branch() {
-        local BRANCH=`git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'`
-        if [[ ! "${BRANCH}" == "" ]]; then
-            local STAT=`_parse_git_dirty`
-            printf "[${BRANCH}${STAT}]"
-        fi
-    }
-
-    _parse_git_dirty() {
-        local status=`LC_ALL=C git status 2>&1 | tee`
-        local dirty=`echo -n "${status}" 2> /dev/null | grep "modified:" &> /dev/null; echo "$?"`
-        local untracked=`echo -n "${status}" 2> /dev/null | grep "Untracked files" &> /dev/null; echo "$?"`
-        local ahead=`echo -n "${status}" 2> /dev/null | grep "Your branch is ahead of" &> /dev/null; echo "$?"`
-        local newfile=`echo -n "${status}" 2> /dev/null | grep "new file:" &> /dev/null; echo "$?"`
-        local renamed=`echo -n "${status}" 2> /dev/null | grep "renamed:" &> /dev/null; echo "$?"`
-        local deleted=`echo -n "${status}" 2> /dev/null | grep "deleted:" &> /dev/null; echo "$?"`
-        local bits=''
-        if [ "${renamed}" == "0" ]; then bits="→${bits}"; fi
-        if [ "${ahead}" == "0" ]; then bits="↑${bits}"; fi
-        if [ "${newfile}" == "0" ]; then bits="✚${bits}"; fi
-        if [ "${untracked}" == "0" ]; then bits="⚑${bits}"; fi
-        if [ "${deleted}" == "0" ]; then bits="✖${bits}"; fi
-        if [ "${dirty}" == "0" ]; then bits="✱${bits}"; fi
-        if [ ! "${bits}" == "" ]; then printf " ${bits}"; fi
-    }
-    _parse_git_color() {
-    if [[ "$(_parse_git_dirty)" != "" ]] ; then printf $RED; else printf $GREEN; fi
-    }
-    _parse_system() {
-        local system=$(_isSystem)
-        if [ ! "${system}" == "" ]; then printf " (${system})"; fi
-    }
-
-    _parse_return() {
-        if [[ $? -ne 0 ]]; then printf "$RED\xe2\x9c\x98$NC "; fi
-    }
-
-
-    PS1="\$(_parse_return)\[$GRAY\]\${_hostname}\\${_servername} \[$MAGENTA\]$(printf '\xe2\x9e\x9c') \[$CYAN\]\w \$([[ -n \$(git branch 2> /dev/null) ]])\[$MAGENTA\]\$(_parse_system) \[\$(_parse_git_color)\]\$(_parse_git_branch)\[$WHITE\]\n$ \[$NC\]"
-
-}
-
 printf "\n\n    ${GREEN}Synchronized shell scripts from GitHub for ${WHITE}${server}${GREEN} successfully loaded${NC}\n\n    For an overview of the commands type ${CYAN}helpme${NC}\n\n"
 if [[ -f "syncBashScript.sh" ]]; then rm syncBashScript.sh; fi
-}  # make sure whole file is loaded
+
+}
