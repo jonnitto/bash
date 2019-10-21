@@ -1,3 +1,5 @@
+#!/bin/zsh
+
 # wget -qN https://raw.githubusercontent.com/jonnitto/bash/master/bash.sh -O syncBashScript.sh; source syncBashScript.sh
 
 {  # make sure whole file is loaded
@@ -188,7 +190,7 @@ updateShopware() {
 
 flow() {
     _checkNeos; [ $? -ne 0 ] && return 1
-    if [ ! $@ ]; then 
+    if [ $# -eq 0 ]; then 
         ./flow
         return 0;
     fi
@@ -238,11 +240,19 @@ flow() {
     local cmd=$1;
     shift;
     if [ ${flowCommands[$cmd]} ]; then
-        echo "./flow ${flowCommands[$cmd]} $@" | bash
+        if [ $# -eq 0 ]; then
+            ./flow ${flowCommands[$cmd]}
+        else
+            echo "./flow ${flowCommands[$cmd]} $@" | bash
+        fi
         return 0;
     fi
     if [ ${shellCommands[$cmd]} ]; then
-        echo "${shellCommands[$cmd]} $@" | bash
+        if [ $# -eq 0 ]; then
+            ${shellCommands[$cmd]}
+        else
+            echo "./flow ${flowCommands[$cmd]} $@" | bash
+        fi
         return 0;
     fi
     if [[ $cmd == 'recreateThumbnails' ]]; then
