@@ -241,7 +241,7 @@ flow() {
     shift;
     if [ ${flowCommands[$cmd]} ]; then
         if [ $# -eq 0 ]; then
-            ./flow ${flowCommands[$cmd]}
+            echo "./flow ${flowCommands[$cmd]}" | bash
         else
             echo "./flow ${flowCommands[$cmd]} $@" | bash
         fi
@@ -249,7 +249,7 @@ flow() {
     fi
     if [ ${shellCommands[$cmd]} ]; then
         if [ $# -eq 0 ]; then
-            ${shellCommands[$cmd]}
+            echo "${shellCommands[$cmd]}" | bash
         else
             echo "./flow ${flowCommands[$cmd]} $@" | bash
         fi
