@@ -391,9 +391,9 @@ __EOF__
         alias gap='git add -p'
         alias gfr='git stash && git fetch && git rebase && git stash pop'
         neosPluginsDiff() {
-            if [[ $1 ]]
+            if [ $1 ]
                 then
-                    if [[ $1 == Carbon.* ]]
+                    if [ $1 == Carbon.* ]
                         then ksdiff ~/Repos/Neos.Plugins/$1 Packages/Carbon/$1
                         else ksdiff ~/Repos/Neos.Plugins/$1 Packages/Plugins/$1
                     fi
