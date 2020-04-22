@@ -282,8 +282,8 @@ flow() {
     if [[ $cmd == 'deployContext' ]]; then
         local newContext='Production'
         if [ -f deploy.yaml ]; then
-            flowContext=$(cat deploy.yaml | grep flow_context | awk '{print $2}')
-            subContext=$(cat deploy.yaml | grep sub_context | awk '{print $2}')
+            flowContext=$(cat deploy.yaml | grep ' flow_context' | awk '{print $2}')
+            subContext=$(cat deploy.yaml | grep ' sub_context' | awk '{print $2}')
             if [ $flowContext ]
                 then newContext=$flowContext;
             elif [ $subContext ]
