@@ -198,7 +198,8 @@ flow() {
     typeset -A shellCommands;
     typeset -A functionCommands;
     flowCommands=(
-        flushcache 'flow:cache:flush'
+        flushCache 'flow:cache:flush'
+        flushContentCache 'cache:flushone --identifier Neos_Fusion_Content'
         warmup 'flow:cache:warmup'
         publishResource 'resource:publish'
         migratedb 'doctrine:migrate'
